@@ -8,18 +8,18 @@ jobs:
   gates:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.11"
       - run: pip install -r requirements-dev.txt
       - run: python scripts/make_fixtures.py
       - run: ruff check src tests scripts
       - run: ruff format --check src tests scripts
-      - run: pytest --cov=crypto_intel --cov-fail-under=90
+      - run: PYTHONPATH=src pytest --cov=crypto_intel --cov-fail-under=90
       - run: python scripts/check_pdpa.py
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
