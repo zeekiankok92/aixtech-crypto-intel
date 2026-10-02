@@ -63,7 +63,7 @@ def test_brief_and_posture_commands(capsys):
 
 
 def test_security_posture_refuses_trade_paths():
-    assert attest_source("SYNTHETIC", "fixture").startswith("a") or True
+    assert len(attest_source("SYNTHETIC", "fixture")) == 64
     assert len(attest_source("PUBLIC_READ", "ticker")) == 64
     with pytest.raises(PermissionError):
         refuse_trade_secret("exchange_trade_key")
