@@ -12,6 +12,7 @@ from crypto_intel.engine import backtest, run_once
 from crypto_intel.market import group_by_symbol, load_candles
 from crypto_intel.models import ExecutionMode
 from crypto_intel.posture import Role, allow, attest_source, feed_status, mode_status
+from crypto_intel.scenarios import render_markdown, run_scenarios
 from crypto_intel.security import AuditLog
 
 
@@ -29,6 +30,10 @@ def build_parser() -> argparse.ArgumentParser:
     brief.add_argument("fixture")
     posture = sub.add_parser("posture", help="security control snapshot for a fixture")
     posture.add_argument("fixture")
+    scenarios = sub.add_parser("scenarios", help="run seeded synthetic paper scenarios")
+    scenarios.add_argument("--seed", type=int, default=0)
+    scenarios.add_argument("--runs", type=int, default=20)
+    scenarios.add_argument("--json", action="store_true")
     return parser
 
 
@@ -91,6 +96,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     if args.command == "posture":
         print(json.dumps(posture(args.fixture), indent=2))
+        return 0
+    if args.command == "scenarios":
+        report = run_scenarios(seed=args.seed, runs=args.runs)
+        print(json.dumps(report, indent=2) if args.json else render_markdown(report))
         return 0
     grouped = group_by_symbol(load_candles(args.fixture))
     if args.symbol not in grouped:

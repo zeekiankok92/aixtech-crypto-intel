@@ -60,6 +60,38 @@ The fixture is labelled `SYNTHETIC` and is not a market history.
 5. PDPA-style tripwire over fixtures and docs.
 6. Ruff lint (including bandit-style `S` rules), format, pytest coverage floor, gitleaks in CI.
 
+## Risk & Vulnerability Testing
+
+Run the focused paper-risk tests and the complete suite with coverage:
+
+```bash
+PYTHONPATH=src pytest -q
+PYTHONPATH=src pytest -q --cov=crypto_intel --cov-fail-under=90
+```
+
+The tests cover perpetual funding, invalid candle prices and volumes, malformed
+synthetic fixtures, drawdown/gap halts, stablecoin alert-only behavior, audit
+tampering, secret redaction, and refusal of non-paper execution. CI runs pytest
+on Python 3.11 and 3.12, Bandit, and pip-audit (dependency audit is
+non-blocking when its vulnerability service is unavailable).
+
+## Scenario modelling
+
+Generate the labelled synthetic fixture, then run deterministic 90-day
+optimistic, neutral, and pessimistic paper scenarios (20 seeded runs by default):
+
+```bash
+python scripts/make_fixtures.py
+PYTHONPATH=src python -m crypto_intel.cli scenarios --seed 42 --runs 20
+PYTHONPATH=src python -m crypto_intel.cli scenarios --seed 42 --runs 20 --json
+```
+
+The report includes equal-weight $10,000 portfolio results, per-asset-class
+breakdowns, 20% drawdown halts, and mean/5th/95th percentile returns. Stablecoins
+follow each scenario's peg path but remain alert-only and are never traded.
+Results are **SYNTHETIC / PAPER ONLY / NOT ADVICE**; they are not market history,
+forecasts, or recommendations.
+
 ## Honesty
 
 - No live exchange connector is included. Do not add trade keys to this tree.
