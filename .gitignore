@@ -5,6 +5,7 @@ htmlcov/
 *.egg-info/
 dist/
 build/
+fixtures/candles_synthetic.json
 .env
 *.pem
 *.key
