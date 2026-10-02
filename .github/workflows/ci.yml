@@ -7,18 +7,24 @@ on:
 jobs:
   gates:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.11"
-      - run: pip install -r requirements-dev.txt
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -r requirements-dev.txt bandit==1.9.4 pip-audit==2.10.1
       - run: python scripts/make_fixtures.py
       - run: ruff check src tests scripts
       - run: ruff format --check src tests scripts
-      - run: PYTHONPATH=src pytest --cov=crypto_intel --cov-fail-under=90
+      - run: PYTHONPATH=src pytest -q --cov=crypto_intel --cov-fail-under=90
+      - run: bandit -r src/crypto_intel
+      - run: pip-audit
+        continue-on-error: true
       - run: python scripts/check_pdpa.py
       - uses: gitleaks/gitleaks-action@v3
         env:

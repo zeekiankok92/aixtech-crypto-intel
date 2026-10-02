@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -41,6 +42,11 @@ class Candle:
     funding_rate: float = 0.0
 
     def __post_init__(self) -> None:
+        prices = (self.open, self.high, self.low, self.close)
+        if any(not math.isfinite(price) or price <= 0 for price in prices):
+            raise ValueError("candle prices must be positive and finite")
+        if not math.isfinite(self.volume):
+            raise ValueError("volume must be finite")
         if self.high < max(self.open, self.close, self.low):
             raise ValueError(f"high below range for {self.symbol} {self.timestamp}")
         if self.low > min(self.open, self.close, self.high):
