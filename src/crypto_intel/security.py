@@ -13,6 +13,9 @@ from crypto_intel.models import AuditEvent, ExecutionMode
 
 SECRET_PATTERNS = (
     re.compile(r"(?i)(api[_-]?key|secret|password|token)\s*[:=]\s*['\"]?[A-Za-z0-9_\-]{12,}"),
+    re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/\-]+=*"),
+    re.compile(r"\b[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b"),
+    re.compile(r"\b[a-fA-F0-9]{64}\b"),
     re.compile(r"\b(?:sk|pk)_(?:live|test)_[A-Za-z0-9]{8,}\b"),
     re.compile(r"\b[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}\b", re.IGNORECASE),
 )
@@ -75,9 +78,9 @@ class AuditLog:
 
     def verify(self) -> bool:
         previous = "GENESIS"
-        for event in self.events:
+        for sequence, event in enumerate(self.events, start=1):
             expected = hash_event(previous, event.sequence, event.action, event.detail)
-            if event.previous_hash != previous or event.digest != expected:
+            if event.sequence != sequence or event.previous_hash != previous or event.digest != expected:
                 return False
             previous = event.digest
-        return True
+        return previous == self._previous

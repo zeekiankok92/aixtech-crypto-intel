@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from crypto_intel.costs import round_trip_cost
 from crypto_intel.models import Candle, ExecutionMode, PaperFill, Signal
 from crypto_intel.risk import evaluate
@@ -40,8 +42,10 @@ def run_once(
     return signal, fill
 
 
-def backtest(candles: list[Candle], *, audit: AuditLog | None = None) -> dict[str, float]:
+def backtest(candles: list[Candle], *, audit: AuditLog | None = None, slippage_mult: float = 1.0) -> dict[str, float]:
     """Walk-forward paper backtest. Cost is the declared class assumption."""
+    if not math.isfinite(slippage_mult) or slippage_mult <= 0:
+        raise ValueError("slippage_mult must be positive and finite")
     log = audit or AuditLog()
     equity = 1.0
     peak = 1.0
@@ -53,7 +57,7 @@ def backtest(candles: list[Candle], *, audit: AuditLog | None = None) -> dict[st
         if fill.size_fraction <= 0:
             continue
         forward = candles[index + 1].close / candles[index].close - 1.0
-        pnl = fill.size_fraction * (forward - round_trip_cost(fill.asset_class))
+        pnl = fill.size_fraction * (forward - round_trip_cost(fill.asset_class) * slippage_mult)
         equity *= 1.0 + pnl
         peak = max(peak, equity)
         trades += 1
